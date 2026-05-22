@@ -160,11 +160,9 @@ class AST_Tests(unittest.TestCase):
             self.assertRaises(TypeError, ast.parse, ast.Constant(42),
                               optimize=optval)
 
-    def test_parse_removes_single_null_container_unpack(self):
+    def test_parse_removes_single_null_set_unpack(self):
         tests = [
-            ('[*()]', ast.List, []),
             ('{*()}', ast.Set, []),
-            ('(*(),)', ast.Tuple, []),
         ]
 
         for source, node_type, expected_values in tests:
@@ -176,12 +174,9 @@ class AST_Tests(unittest.TestCase):
                     expected_values,
                 )
 
-    def test_parse_removes_single_null_container_unpack_in_assignment(self):
+    def test_parse_removes_single_null_set_unpack_in_assignment(self):
         tests = [
-            ('x = [*()]', ast.List, []),
             ('x = {*()}', ast.Set, []),
-            ('x = *(),', ast.Tuple, []),
-            ('x = (*(),)', ast.Tuple, []),
         ]
 
         for source, node_type, expected_values in tests:
@@ -194,17 +189,11 @@ class AST_Tests(unittest.TestCase):
                     expected_values,
                 )
 
-    def test_parse_keeps_null_container_unpack_in_larger_literal(self):
+    def test_parse_keeps_null_set_unpack_in_larger_literal(self):
         tests = [
-            ('[*(), 2]', ast.List, 2),
             ('{*(), 2}', ast.Set, 2),
-            ('(*(), 2)', ast.Tuple, 2),
-            ('[1, *(), 2]', ast.List, 3),
             ('{1, *(), 2}', ast.Set, 3),
-            ('(1, *(), 2)', ast.Tuple, 3),
-            ('[*(), *()]', ast.List, 2),
             ('{*(), *()}', ast.Set, 2),
-            ('(*(), *())', ast.Tuple, 2),
         ]
 
         for source, node_type, expected_len in tests:
@@ -214,17 +203,11 @@ class AST_Tests(unittest.TestCase):
                 self.assertEqual(len(node.elts), expected_len)
                 self.assertTrue(any(isinstance(elt, ast.Starred) for elt in node.elts))
 
-    def test_parse_keeps_null_container_unpack_in_larger_assignment_value(self):
+    def test_parse_keeps_null_set_unpack_in_larger_assignment_value(self):
         tests = [
-            ('x = [*(), 2]', ast.List, 2),
             ('x = {*(), 2}', ast.Set, 2),
-            ('x = *(), 2', ast.Tuple, 2),
-            ('x = [1, *(), 2]', ast.List, 3),
             ('x = {1, *(), 2}', ast.Set, 3),
-            ('x = 1, *(), 2', ast.Tuple, 3),
-            ('x = [*(), *()]', ast.List, 2),
             ('x = {*(), *()}', ast.Set, 2),
-            ('x = *(), *()', ast.Tuple, 2),
         ]
 
         for source, node_type, expected_len in tests:

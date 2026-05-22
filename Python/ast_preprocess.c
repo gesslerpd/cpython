@@ -568,6 +568,7 @@ astfold_expr(expr_ty node_, PyArena *ctx_, _PyASTPreprocessState *state)
         break;
     case Set_kind:
         CALL_SEQ(astfold_expr, expr, node_->v.Set.elts);
+        // optimize `{*()}` empty set literal idiom
         remove_null_container_unpacks(node_->v.Set.elts);
         break;
     case ListComp_kind:
@@ -638,11 +639,9 @@ astfold_expr(expr_ty node_, PyArena *ctx_, _PyASTPreprocessState *state)
         break;
     case List_kind:
         CALL_SEQ(astfold_expr, expr, node_->v.List.elts);
-        remove_null_container_unpacks(node_->v.List.elts);
         break;
     case Tuple_kind:
         CALL_SEQ(astfold_expr, expr, node_->v.Tuple.elts);
-        remove_null_container_unpacks(node_->v.Tuple.elts);
         break;
     case Name_kind:
         if (state->syntax_check_only) {
