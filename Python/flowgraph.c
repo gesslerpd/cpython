@@ -1744,6 +1744,44 @@ optimize_lists_and_sets(basicblock *bb, int i, int nextop,
     return SUCCESS;
 }
 
+/*
+Optimize lists and sets for an empty unpack idiom `*()` when the current
+BUILD_SET/BUILD_LIST is immediately followed by BUILD_TUPLE 0 and the matching
+SET_UPDATE/LIST_EXTEND 1.
+
+For example, this removes the first unpack in `{*(), *()}`, but not the second:
+once the leading pair is removed, the remaining `*()` is no longer attached to
+the BUILD_SET instruction the optimizer is visiting.
+*/
+static void
+optimize_first_empty_unpack(basicblock *bb, int i, int build_opcode)
+{
+    if (i < 0 || i + 2 >= bb->b_iused)
+    {
+        return;
+    }
+
+    cfg_instr *build = &bb->b_instr[i];
+    cfg_instr *empty = &bb->b_instr[i + 1];
+    cfg_instr *update = &bb->b_instr[i + 2];
+
+    if (build->i_opcode != build_opcode) {
+        return;
+    }
+    if (empty->i_opcode != BUILD_TUPLE || empty->i_oparg != 0) {
+        return;
+    }
+    int update_opcode = build_opcode == BUILD_LIST ? LIST_EXTEND : SET_UPDATE;
+    if (update->i_opcode != update_opcode || update->i_oparg != 1) {
+        return;
+    }
+
+    INSTR_SET_OP0(empty, NOP);
+    INSTR_SET_LOC(empty, NO_LOCATION);
+    INSTR_SET_OP0(update, NOP);
+    INSTR_SET_LOC(update, NO_LOCATION);
+}
+
 /* Check whether the total number of items in the (possibly nested) collection obj exceeds
  * limit. Return a negative number if it does, and a non-negative number otherwise.
  * Used to avoid creating constants which are slow to hash.
@@ -2441,6 +2479,7 @@ optimize_basic_block(PyObject *const_cache, basicblock *bb, PyObject *consts,
                 break;
             case BUILD_LIST:
             case BUILD_SET:
+                optimize_first_empty_unpack(bb, i, opcode);
                 RETURN_IF_ERROR(optimize_lists_and_sets(bb, i, nextop, consts, const_cache, consts_index));
                 break;
             case POP_JUMP_IF_NOT_NONE:
