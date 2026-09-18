@@ -1127,8 +1127,6 @@ class TestSpecifics(unittest.TestCase):
                 ('BUILD_SET', 0),
                 ('RETURN_VALUE', None),
             ],
-            # TODO: fix this test (stack underflow)
-            # Assertion failed: stack->size > 0, file C:\Users\admin\Downloads\cpython\Python\flowgraph.c, line 2745
             '{*(), *()}': [
                 ('RESUME', 0),
                 ('BUILD_SET', 0),
@@ -1141,6 +1139,19 @@ class TestSpecifics(unittest.TestCase):
                 ('RETURN_VALUE', None),
             ],
             '{*(), 1, 2, 3}': [
+                ('RESUME', 0),
+                ('BUILD_SET', 0),
+                ('LOAD_CONST', frozenset({1, 2, 3})),
+                ('SET_UPDATE', 1),
+                ('RETURN_VALUE', None),
+            ],
+            '{1, *()}': [
+                ('RESUME', 0),
+                ('LOAD_SMALL_INT', 1),
+                ('BUILD_SET', 1),
+                ('RETURN_VALUE', None),
+            ],
+            '{1, 2, 3, *()}': [
                 ('RESUME', 0),
                 ('BUILD_SET', 0),
                 ('LOAD_CONST', frozenset({1, 2, 3})),
@@ -1163,23 +1174,6 @@ class TestSpecifics(unittest.TestCase):
                 ('SET_UPDATE', 1),
                 ('RETURN_VALUE', None),
             ],
-            '{1, *()}': [
-                ('RESUME', 0),
-                ('LOAD_SMALL_INT', 1),
-                ('BUILD_SET', 1),
-                ('LOAD_COMMON_CONSTANT', ()),
-                ('SET_UPDATE', 1),
-                ('RETURN_VALUE', None),
-            ],
-            '{1, 2, 3, *()}': [
-                ('RESUME', 0),
-                ('BUILD_SET', 0),
-                ('LOAD_CONST', frozenset({1, 2, 3})),
-                ('SET_UPDATE', 1),
-                ('LOAD_COMMON_CONSTANT', ()),
-                ('SET_UPDATE', 1),
-                ('RETURN_VALUE', None),
-            ],
         }
 
         for source, expected in cases.items():
@@ -1199,8 +1193,6 @@ class TestSpecifics(unittest.TestCase):
                 ('BUILD_LIST', 0),
                 ('RETURN_VALUE', None),
             ],
-            # TODO: fix this test (stack underflow)
-            # Assertion failed: stack->size > 0, file C:\Users\admin\Downloads\cpython\Python\flowgraph.c, line 2745
             '[*(), *()]': [
                 ('RESUME', 0),
                 ('BUILD_LIST', 0),
@@ -1217,8 +1209,6 @@ class TestSpecifics(unittest.TestCase):
                 ('LOAD_COMMON_CONSTANT', ()),
                 ('RETURN_VALUE', None),
             ],
-            # TODO: fix this test (stack underflow)
-            # Assertion failed: stack->size > 0, file C:\Users\admin\Downloads\cpython\Python\flowgraph.c, line 2745
             '(*(), *())': [
                 ('RESUME', 0),
                 ('LOAD_COMMON_CONSTANT', ()),
@@ -1227,6 +1217,19 @@ class TestSpecifics(unittest.TestCase):
             '(*(), 1)': [
                 ('RESUME', 0),
                 ('LOAD_CONST', (1,)),
+                ('RETURN_VALUE', None),
+            ],
+            '[1, *()]': [
+                ('RESUME', 0),
+                ('LOAD_SMALL_INT', 1),
+                ('BUILD_LIST', 1),
+                ('RETURN_VALUE', None),
+            ],
+            '[1, 2, 3, *()]': [
+                ('RESUME', 0),
+                ('BUILD_LIST', 0),
+                ('LOAD_CONST', (1, 2, 3)),
+                ('LIST_EXTEND', 1),
                 ('RETURN_VALUE', None),
             ],
             # unoptimized cases
@@ -1242,23 +1245,6 @@ class TestSpecifics(unittest.TestCase):
                 ('BUILD_LIST', 0),
                 ('LOAD_NAME', 'x'),
                 ('BUILD_TUPLE', 1),
-                ('LIST_EXTEND', 1),
-                ('RETURN_VALUE', None),
-            ],
-            '[1, *()]': [
-                ('RESUME', 0),
-                ('LOAD_SMALL_INT', 1),
-                ('BUILD_LIST', 1),
-                ('LOAD_COMMON_CONSTANT', ()),
-                ('LIST_EXTEND', 1),
-                ('RETURN_VALUE', None),
-            ],
-            '[1, 2, 3, *()]': [
-                ('RESUME', 0),
-                ('BUILD_LIST', 0),
-                ('LOAD_CONST', (1, 2, 3)),
-                ('LIST_EXTEND', 1),
-                ('LOAD_COMMON_CONSTANT', ()),
                 ('LIST_EXTEND', 1),
                 ('RETURN_VALUE', None),
             ],
